@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depozite Bancare</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --green: #16a34a;
+            --green-bg: #f0fdf4;
+            --yellow-bg: #fffbeb;
+            --blue-bg: #eff6ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 1.5rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        /* Summary cards */
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            text-align: center;
+        }
+
+        .summary-card.green { background: var(--green-bg); }
+        .summary-card.yellow { background: var(--yellow-bg); }
+        .summary-card.blue { background: var(--blue-bg); }
+
+        .summary-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-card .value { font-size: 1.35rem; font-weight: 700; }
+
+        /* Sections */
+        .section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: var(--text-muted);
+        }
+
+        .form-group input, .form-group select {
+            padding: 0.5rem 0.65rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 0.92rem;
+            color: var(--text);
+            background: #fff;
+            transition: border-color 0.15s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            padding: 0.5rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary { background: #475569; color: #fff; }
+        .btn-secondary:hover { background: #334155; }
+        .btn-danger { background: var(--danger); color: #fff; padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+        .btn-danger:hover { background: var(--danger-hover); }
+        .btn-add { align-self: end; }
+
+        /* Import */
+        .import-hint {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .import-hint code {
+            background: #f1f5f9;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .import-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .import-or {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .import-textarea {
+            width: 100%;
+            min-height: 120px;
+            margin-top: 0.75rem;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+        }
+
+        .import-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .paste-area { display: none; }
+
+        .import-result {
+            margin-top: 0.75rem;
+            padding: 0.6rem 0.85rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .import-result.success { display: block; background: var(--green-bg); color: var(--green); }
+        .import-result.error { display: block; background: #fef2f2; color: var(--danger); }
+
+        /* Table */
+        .table-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-header h2 { font-size: 1.1rem; }
+
+        .table-wrapper { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+
+        th, td {
+            padding: 0.5rem 0.6rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        th {
+            background: #f1f5f9;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover { background: #e2e8f0; }
+        th .sort-arrow { margin-left: 0.3rem; font-size: 0.7rem; opacity: 0.3; }
+        th.sorted .sort-arrow { opacity: 1; color: var(--primary); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8fafc; }
+        .money { font-weight: 600; font-variant-numeric: tabular-nums; }
+        .interest-value { color: var(--green); font-weight: 700; }
+        .total-value { font-weight: 700; color: var(--primary); }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .actions-col { text-align: center; }
+
+        /* Tooltips */
+        .has-tooltip {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dashed currentColor;
+        }
+
+        .has-tooltip .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 400;
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 0.15s;
+            line-height: 1.5;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .has-tooltip .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1e293b;
+        }
+
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Allow wrapping in table tooltips */
+        td .has-tooltip .tooltip {
+            white-space: pre-line;
+            min-width: 220px;
+            text-align: left;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            h1 { font-size: 1.4rem; }
+            .form-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>💰 Depozite Bancare</h1>
+
+<!-- Summary -->
+<div class="summary">
+    <div class="summary-card blue">
+        <div class="label">Total depus</div>
+        <div class="value" id="sumTotal">0</div>
+    </div>
+    <div class="summary-card green">
+        <div class="label has-tooltip">Total dobândă
+            <span class="tooltip">Dobândă simplă per depozit:<br>Valoare × (Dobândă% ÷ 100) × (Luni efective ÷ 12)<br>Luni efective = din data deschidere până la finalizare<br>Totalul = suma dobânzilor pe valută</span>
+        </div>
+        <div class="value" id="sumDobanda">0</div>
+    </div>
+    <div class="summary-card yellow">
+        <div class="label">Total la scadență</div>
+        <div class="value" id="sumScadenta">0</div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Nr. depozite</div>
+        <div class="value" id="sumCount">0</div>
+    </div>
+</div>
+
+<!-- Import CSV -->
+<div class="section">
+    <h2>📥 Import CSV</h2>
+    <div class="import-hint">
+        Format așteptat (cu header): <code>Perioada luni,Valoare,Valuta,Data deschidere,Data finalizarii,Dobanda %</code><br>
+        Separator: virgulă, punct-și-virgulă sau tab. Date: <code>dd.mm.yyyy</code>, <code>dd/mm/yyyy</code> sau <code>yyyy-mm-dd</code>
+    </div>
+    <div class="import-actions">
+        <input type="file" id="csvFile" accept=".csv,.txt,.tsv" onchange="importFromFile(this)">
+        <span class="import-or">sau</span>
+        <button class="btn btn-secondary" onclick="togglePaste()">Lipește text CSV</button>
+    </div>
+    <div class="paste-area" id="pasteArea">
+        <textarea class="import-textarea" id="csvText" placeholder="Lipește conținutul CSV aici...&#10;&#10;Exemplu:&#10;12,10000,RON,01.01.2025,01.01.2026,6.5&#10;6,5000,EUR,15.03.2025,15.09.2025,4.2"></textarea>
+        <div style="margin-top:0.5rem">
+            <button class="btn btn-primary" onclick="importFromText()">Importă</button>
+        </div>
+    </div>
+    <div class="import-result" id="importResult"></div>
+</div>
+
+<!-- Form -->
+<div class="section">
+    <h2>Adaugă depozit manual</h2>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="perioada">Perioada (luni)</label>
+            <input type="number" id="perioada" min="1" max="120" placeholder="ex: 12">
+        </div>
+        <div class="form-group">
+            <label for="valoare">Valoare</label>
+            <input type="number" id="valoare" min="0" step="0.01" placeholder="ex: 10000">
+        </div>
+        <div class="form-group">
+            <label for="valuta">Valuta</label>
+            <select id="valuta">
+                <option value="RON">RON</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="dataStart">Data deschidere</label>
+            <input type="date" id="dataStart">
+        </div>
+        <div class="form-group">
+            <label for="dataEnd">Data finalizării</label>
+            <input type="date" id="dataEnd">
+        </div>
+        <div class="form-group">
+            <label for="dobanda">Dobândă (%)</label>
+            <input type="number" id="dobanda" min="0" max="100" step="0.01" placeholder="ex: 6.5">
+        </div>
+        <div class="form-group btn-add">
+            <button class="btn btn-primary" onclick="addDepozit()">+ Adaugă</button>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="table-section">
+    <div class="table-header">
+        <h2>Lista depozitelor</h2>
+        <button class="btn btn-danger" onclick="clearAll()" style="display:none" id="btnClearAll">Șterge tot</button>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th data-sort="perioada" onclick="sortBy('perioada')" style="width:70px">Luni <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="valoare" onclick="sortBy('valoare')">Valoare <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="valuta" onclick="sortBy('valuta')">Valuta <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="dataStart" onclick="sortBy('dataStart')">Data<br>deschidere <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="dataEnd" onclick="sortBy('dataEnd')">Data<br>finalizării <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="luniRamase" onclick="sortBy('luniRamase')">Luni<br>rămase <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="dobanda" onclick="sortBy('dobanda')" style="width:60px">Dobândă<br>% <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="valoareDobanda" onclick="sortBy('valoareDobanda')"><span class="has-tooltip">Dobândă<br>câștigată<span class="tooltip">Valoare × (Dobândă% ÷ 100) × (Luni efective ÷ 12)</span></span> <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="totalScadenta" onclick="sortBy('totalScadenta')">Total la<br>scadență <span class="sort-arrow">▲▼</span></th>
+                    <th>Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState">
+            <p>Niciun depozit adăugat. Importă un CSV sau completează formularul de mai sus.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let depozite = JSON.parse(localStorage.getItem('depozite') || '[]');
+    let currentSort = { field: 'dataEnd', asc: true };
+
+    function save() {
+        localStorage.setItem('depozite', JSON.stringify(depozite));
+    }
+
+    function calcLuniEfective(dataStart, dataEnd) {
+        const s = new Date(dataStart);
+        const e = new Date(dataEnd);
+        return (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+    }
+
+    function calcDobanda(valoare, dobandaProc, luniEfective) {
+        return valoare * (dobandaProc / 100) * (luniEfective / 12);
+    }
+
+    function formatNumber(n, decimals = 2) {
+        return n.toLocaleString('ro-RO', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    // --- CSV IMPORT ---
+
+    function togglePaste() {
+        const area = document.getElementById('pasteArea');
+        area.style.display = area.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function showImportResult(msg, isError) {
+        const el = document.getElementById('importResult');
+        el.textContent = msg;
+        el.className = 'import-result ' + (isError ? 'error' : 'success');
+    }
+
+    function parseDate(str) {
+        str = str.trim();
+        // dd.mm.yyyy or dd/mm/yyyy (1 or 2 digits for day/month)
+        let m = str.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+        if (m) {
+            return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+        }
+        // yyyy-mm-dd (already ISO)
+        m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (m) {
+            return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+        }
+        return null;
+    }
+
+    // Parse a CSV line respecting quoted fields
+    function splitCSVLine(line, sep) {
+        const fields = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuotes) {
+                if (ch === '"') {
+                    if (i + 1 < line.length && line[i + 1] === '"') {
+                        current += '"';
+                        i++; // skip escaped quote
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    current += ch;
+                }
+            } else {
+                if (ch === '"') {
+                    inQuotes = true;
+                } else if (ch === sep) {
+                    fields.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+        }
+        fields.push(current.trim());
+        return fields;
+    }
+
+    function detectSeparator(lines) {
+        // Try to find separator: check if splitting by tab, semicolon, or comma
+        // gives consistent column counts across lines
+        for (const sep of ['\t', ';', ',']) {
+            const counts = lines.slice(0, Math.min(3, lines.length)).map(l => splitCSVLine(l, sep).length);
+            if (counts[0] >= 6 && counts.every(c => c === counts[0])) return sep;
+        }
+        return ',';
+    }
+
+    function parseCSV(text) {
+        const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+        if (lines.length === 0) return { items: [], errors: [] };
+
+        const sep = detectSeparator(lines);
+
+        // Check if first line is a header
+        let startIdx = 0;
+        const firstLine = lines[0].toLowerCase();
+        if (firstLine.includes('perioada') || firstLine.includes('valoare') || firstLine.includes('valuta') || firstLine.includes('dobanda') || firstLine.includes('dobândă')) {
+            startIdx = 1;
+        }
+
+        const items = [];
+        const errors = [];
+
+        for (let i = startIdx; i < lines.length; i++) {
+            const parts = splitCSVLine(lines[i], sep);
+
+            if (parts.length < 6) {
+                errors.push(`Rândul ${i + 1}: are doar ${parts.length} coloane (trebuie 6)`);
+                continue;
+            }
+
+            const perioada = parseInt(parts[0]);
+            // Comma as decimal separator: "53029,57" -> 53029.57
+            const valoareStr = parts[1].replace(/\./g, '').replace(',', '.');
+            const valoare = parseFloat(valoareStr);
+            const valuta = parts[2].toUpperCase().trim();
+            const dataStart = parseDate(parts[3]);
+            const dataEnd = parseDate(parts[4]);
+            const dobandaStr = parts[5].replace(',', '.');
+            const dobanda = parseFloat(dobandaStr);
+
+            if (isNaN(perioada) || perioada <= 0) {
+                errors.push(`Rândul ${i + 1}: perioada invalidă "${parts[0]}"`);
+                continue;
+            }
+            if (isNaN(valoare) || valoare <= 0) {
+                errors.push(`Rândul ${i + 1}: valoare invalidă "${parts[1]}"`);
+                continue;
+            }
+            if (!dataStart) {
+                errors.push(`Rândul ${i + 1}: data deschidere invalidă "${parts[3]}"`);
+                continue;
+            }
+            if (!dataEnd) {
+                errors.push(`Rândul ${i + 1}: data finalizării invalidă "${parts[4]}"`);
+                continue;
+            }
+            if (isNaN(dobanda) || dobanda < 0) {
+                errors.push(`Rândul ${i + 1}: dobândă invalidă "${parts[5]}"`);
+                continue;
+            }
+
+            const luniEfective = calcLuniEfective(dataStart, dataEnd);
+            const valoareDobanda = calcDobanda(valoare, dobanda, luniEfective);
+
+            items.push({
+                id: Date.now() + i,
+                perioada,
+                valoare,
+                valuta,
+                dataStart,
+                dataEnd,
+                dobanda,
+                luniEfective,
+                valoareDobanda,
+                totalScadenta: valoare + valoareDobanda
+            });
+        }
+
+        return { items, errors };
+    }
+
+    function importItems(text) {
+        const { items, errors } = parseCSV(text);
+
+        if (items.length === 0 && errors.length === 0) {
+            showImportResult('Fișierul este gol.', true);
+            return;
+        }
+
+        if (items.length === 0) {
+            showImportResult('Niciun rând valid. Erori: ' + errors.join('; '), true);
+            return;
+        }
+
+        depozite = depozite.concat(items);
+        save();
+        render();
+
+        let msg = `✓ ${items.length} depozite importate cu succes.`;
+        if (errors.length > 0) {
+            msg += ` ${errors.length} rânduri ignorate.`;
+        }
+        showImportResult(msg, false);
+    }
+
+    function importFromFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            importItems(e.target.result);
+            input.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function importFromText() {
+        const text = document.getElementById('csvText').value;
+        if (!text.trim()) {
+            showImportResult('Lipește conținut CSV mai întâi.', true);
+            return;
+        }
+        importItems(text);
+        document.getElementById('csvText').value = '';
+    }
+
+    // --- ADD / REMOVE ---
+
+    function addDepozit() {
+        const perioada = parseInt(document.getElementById('perioada').value);
+        const valoare = parseFloat(document.getElementById('valoare').value);
+        const valuta = document.getElementById('valuta').value;
+        const dataStart = document.getElementById('dataStart').value;
+        const dataEnd = document.getElementById('dataEnd').value;
+        const dobanda = parseFloat(document.getElementById('dobanda').value);
+
+        if (!perioada || !valoare || !dataStart || !dataEnd || isNaN(dobanda)) {
+            alert('Completează toate câmpurile!');
+            return;
+        }
+
+        const valoareDobanda = calcDobanda(valoare, dobanda, calcLuniEfective(dataStart, dataEnd));
+
+        depozite.push({
+            id: Date.now(),
+            perioada, valoare, valuta, dataStart, dataEnd, dobanda,
+            luniEfective: calcLuniEfective(dataStart, dataEnd),
+            valoareDobanda,
+            totalScadenta: valoare + valoareDobanda
+        });
+
+        save();
+        render();
+
+        document.getElementById('perioada').value = '';
+        document.getElementById('valoare').value = '';
+        document.getElementById('dataStart').value = '';
+        document.getElementById('dataEnd').value = '';
+        document.getElementById('dobanda').value = '';
+    }
+
+    function removeDepozit(id) {
+        depozite = depozite.filter(d => d.id !== id);
+        save();
+        render();
+    }
+
+    function clearAll() {
+        if (!confirm('Sigur vrei să ștergi toate depozitele?')) return;
+        depozite = [];
+        save();
+        render();
+    }
+
+    // --- SORT & RENDER ---
+
+    function sortBy(field) {
+        if (currentSort.field === field) {
+            currentSort.asc = !currentSort.asc;
+        } else {
+            currentSort.field = field;
+            currentSort.asc = true;
+        }
+        render();
+    }
+
+    function calcLuniRamase(dataEnd) {
+        const now = new Date();
+        const end = new Date(dataEnd);
+        const diff = (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth());
+        if (end < now) return '<span style="color:var(--text-muted)">expirat</span>';
+        return diff <= 0 ? '<1' : diff;
+    }
+
+    function getLuniRamaseNum(dataEnd) {
+        const now = new Date();
+        const end = new Date(dataEnd);
+        const diff = (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth());
+        return end < now ? -1 : diff;
+    }
+
+    function getSortedDepozite() {
+        const { field, asc } = currentSort;
+        return [...depozite].sort((a, b) => {
+            if (field === 'luniRamase') {
+                const va = getLuniRamaseNum(a.dataEnd), vb = getLuniRamaseNum(b.dataEnd);
+                return asc ? va - vb : vb - va;
+            }
+            let va = a[field], vb = b[field];
+            if (typeof va === 'string' && typeof vb === 'string') {
+                return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+            }
+            return asc ? va - vb : vb - va;
+        });
+    }
+
+    function render() {
+        const tbody = document.getElementById('tableBody');
+        const emptyState = document.getElementById('emptyState');
+        const sorted = getSortedDepozite();
+
+        document.getElementById('btnClearAll').style.display = depozite.length > 0 ? 'inline-block' : 'none';
+
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+            th.classList.remove('sorted');
+            th.querySelector('.sort-arrow').textContent = '▲▼';
+        });
+        const activeTh = document.querySelector(`th[data-sort="${currentSort.field}"]`);
+        if (activeTh) {
+            activeTh.classList.add('sorted');
+            activeTh.querySelector('.sort-arrow').textContent = currentSort.asc ? '▲' : '▼';
+        }
+
+        if (sorted.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+            updateSummary();
+            return;
+        }
+
+        emptyState.style.display = 'none';
+
+        tbody.innerHTML = sorted.map(d => `
+            <tr>
+                <td>${d.perioada}</td>
+                <td class="money">${formatNumber(d.valoare)}</td>
+                <td>${d.valuta}</td>
+                <td>${formatDate(d.dataStart)}</td>
+                <td>${formatDate(d.dataEnd)}</td>
+                <td>${calcLuniRamase(d.dataEnd)}</td>
+                <td>${formatNumber(d.dobanda)}%</td>
+                <td class="interest-value">
+                    <span class="has-tooltip">+${formatNumber(d.valoareDobanda)}<span class="tooltip">${formatNumber(d.valoare)} × ${formatNumber(d.dobanda)}% × ${d.luniEfective || calcLuniEfective(d.dataStart, d.dataEnd)} luni ÷ 12\n= ${formatNumber(d.valoareDobanda)} ${d.valuta}</span></span>
+                </td>
+                <td class="total-value">${formatNumber(d.totalScadenta)}</td>
+                <td class="actions-col">
+                    <button class="btn btn-danger" onclick="removeDepozit(${d.id})">Șterge</button>
+                </td>
+            </tr>
+        `).join('');
+
+        updateSummary();
+    }
+
+    function updateSummary() {
+        const byCurrency = {};
+        depozite.forEach(d => {
+            if (!byCurrency[d.valuta]) byCurrency[d.valuta] = { total: 0, dobanda: 0, scadenta: 0 };
+            byCurrency[d.valuta].total += d.valoare;
+            byCurrency[d.valuta].dobanda += d.valoareDobanda;
+            byCurrency[d.valuta].scadenta += d.totalScadenta;
+        });
+
+        const currencies = Object.keys(byCurrency);
+        const fmt = (getter) => {
+            if (currencies.length === 0) return '0';
+            return currencies.map(c => `${formatNumber(getter(byCurrency[c]))} ${c}`).join('<br>');
+        };
+
+        document.getElementById('sumTotal').innerHTML = fmt(v => v.total);
+        document.getElementById('sumDobanda').innerHTML = fmt(v => v.dobanda);
+        document.getElementById('sumScadenta').innerHTML = fmt(v => v.scadenta);
+        document.getElementById('sumCount').textContent = depozite.length;
+    }
+
+    // Auto-calculate end date
+    function autoCalcEndDate() {
+        const perioada = parseInt(document.getElementById('perioada').value);
+        const dataStart = document.getElementById('dataStart').value;
+        if (perioada && dataStart) {
+            const d = new Date(dataStart);
+            d.setMonth(d.getMonth() + perioada);
+            document.getElementById('dataEnd').value = d.toISOString().split('T')[0];
+        }
+    }
+
+    document.getElementById('perioada').addEventListener('input', autoCalcEndDate);
+    document.getElementById('dataStart').addEventListener('input', autoCalcEndDate);
+
+    render();
+</script>
+
+</body>
+</html>
