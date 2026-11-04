@@ -495,6 +495,17 @@
         el.className = 'import-result ' + (isError ? 'error' : 'success');
     }
 
+    // Parse numeric value: handles both Romanian format (53.029,57) and plain (53029.57)
+    function parseNumericValue(str) {
+        str = str.trim().replace(/"/g, '');
+        if (str.includes(',')) {
+            // Romanian: dots are thousands, comma is decimal
+            return parseFloat(str.replace(/\./g, '').replace(',', '.'));
+        }
+        // Plain number with dot as decimal
+        return parseFloat(str);
+    }
+
     function parseDate(str) {
         str = str.trim();
         // dd.mm.yyyy or dd/mm/yyyy (1 or 2 digits for day/month)
@@ -579,14 +590,11 @@
             }
 
             const perioada = parseInt(parts[0]);
-            // Comma as decimal separator: "53029,57" -> 53029.57
-            const valoareStr = parts[1].replace(/\./g, '').replace(',', '.');
-            const valoare = parseFloat(valoareStr);
+            const valoare = parseNumericValue(parts[1]);
             const valuta = parts[2].toUpperCase().trim();
             const dataStart = parseDate(parts[3]);
             const dataEnd = parseDate(parts[4]);
-            const dobandaStr = parts[5].replace(',', '.');
-            const dobanda = parseFloat(dobandaStr);
+            const dobanda = parseNumericValue(parts[5]);
 
             if (isNaN(perioada) || perioada <= 0) {
                 errors.push(`Rândul ${i + 1}: perioada invalidă "${parts[0]}"`);
@@ -724,11 +732,9 @@
         if (depozite.length === 0) return;
         const header = 'Perioada luni,Valoare,Valuta,Data deschidere,Data finalizarii,Dobanda %';
         const rows = depozite.map(d => {
-            const valoare = formatNumber(d.valoare).replace(/\./g, '').replace(',', '.');
-            const dobanda = formatNumber(d.dobanda).replace(/\./g, '').replace(',', '.');
             const ds = formatDate(d.dataStart);
             const de = formatDate(d.dataEnd);
-            return `${d.perioada},${valoare},${d.valuta},${ds},${de},${dobanda}`;
+            return `${d.perioada},${d.valoare},${d.valuta},${ds},${de},${d.dobanda}`;
         });
         const csv = header + '\n' + rows.join('\n') + '\n';
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
