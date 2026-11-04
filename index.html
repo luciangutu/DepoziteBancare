@@ -196,7 +196,6 @@
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 0.75rem;
-            overflow: hidden;
         }
 
         .table-header {
@@ -209,9 +208,9 @@
 
         .table-header h2 { font-size: 1.1rem; }
 
-        .table-wrapper { overflow-x: auto; }
+        .table-wrapper { overflow-x: auto; position: relative; }
 
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; position: relative; }
 
         th, td {
             padding: 0.5rem 0.6rem;
@@ -236,6 +235,7 @@
         th.sorted .sort-arrow { opacity: 1; color: var(--primary); }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #f8fafc; }
+        td { position: relative; }
         .money { font-weight: 600; font-variant-numeric: tabular-nums; }
         .interest-value { color: var(--green); font-weight: 700; }
         .total-value { font-weight: 700; color: var(--primary); }
@@ -269,7 +269,7 @@
             font-size: 0.8rem;
             font-weight: 400;
             white-space: nowrap;
-            z-index: 100;
+            z-index: 9999;
             pointer-events: none;
             transition: opacity 0.15s;
             line-height: 1.5;
@@ -297,6 +297,33 @@
             white-space: pre-line;
             min-width: 220px;
             text-align: left;
+            left: auto;
+            right: 0;
+            transform: none;
+        }
+
+        td .has-tooltip .tooltip::after {
+            left: auto;
+            right: 1rem;
+            transform: none;
+        }
+
+        /* Popup detalii dobândă */
+        .dob-popup {
+            position: fixed;
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 0.65rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            z-index: 99999;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+
+        .interest-value {
+            cursor: pointer;
         }
 
         @media (max-width: 640px) {
@@ -318,7 +345,7 @@
     </div>
     <div class="summary-card green">
         <div class="label has-tooltip">Total dobândă
-            <span class="tooltip">Dobândă simplă per depozit:<br>Valoare × (Dobândă% ÷ 100) × (Luni efective ÷ 12)<br>Luni efective = din data deschidere până la finalizare<br>Totalul = suma dobânzilor pe valută</span>
+            <span class="tooltip">Dobândă simplă per depozit:<br>Brut = Valoare × (Dobândă% ÷ 100) × (Perioada ÷ 12)<br>Impozit = 10% din brut<br>Net = Brut − Impozit<br>Totalul = suma dobânzilor nete pe valută</span>
         </div>
         <div class="value" id="sumDobanda">0</div>
     </div>
@@ -396,7 +423,10 @@
 <div class="table-section">
     <div class="table-header">
         <h2>Lista depozitelor</h2>
-        <button class="btn btn-danger" onclick="clearAll()" style="display:none" id="btnClearAll">Șterge tot</button>
+        <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-secondary" onclick="exportCSV()" style="display:none" id="btnExport">📤 Export CSV</button>
+            <button class="btn btn-danger" onclick="clearAll()" style="display:none" id="btnClearAll">Șterge tot</button>
+        </div>
     </div>
     <div class="table-wrapper">
         <table>
@@ -409,7 +439,7 @@
                     <th data-sort="dataEnd" onclick="sortBy('dataEnd')">Data<br>finalizării <span class="sort-arrow">▲▼</span></th>
                     <th data-sort="luniRamase" onclick="sortBy('luniRamase')">Luni<br>rămase <span class="sort-arrow">▲▼</span></th>
                     <th data-sort="dobanda" onclick="sortBy('dobanda')" style="width:60px">Dobândă<br>% <span class="sort-arrow">▲▼</span></th>
-                    <th data-sort="valoareDobanda" onclick="sortBy('valoareDobanda')"><span class="has-tooltip">Dobândă<br>câștigată<span class="tooltip">Valoare × (Dobândă% ÷ 100) × (Luni efective ÷ 12)</span></span> <span class="sort-arrow">▲▼</span></th>
+                    <th data-sort="valoareDobanda" onclick="sortBy('valoareDobanda')" title="Brut = Valoare × Dobândă% × Perioada/12&#10;Impozit = 10% din brut&#10;Net = Brut − Impozit">Dobândă<br>netă <span class="sort-arrow">▲▼</span></th>
                     <th data-sort="totalScadenta" onclick="sortBy('totalScadenta')">Total la<br>scadență <span class="sort-arrow">▲▼</span></th>
                     <th>Acțiuni</th>
                 </tr>
@@ -436,8 +466,10 @@
         return (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
     }
 
-    function calcDobanda(valoare, dobandaProc, luniEfective) {
-        return valoare * (dobandaProc / 100) * (luniEfective / 12);
+    function calcDobanda(valoare, dobandaProc, perioadaLuni) {
+        const brut = valoare * (dobandaProc / 100) * (perioadaLuni / 12);
+        const impozit = brut * 0.10;
+        return { brut, impozit, net: brut - impozit };
     }
 
     function formatNumber(n, decimals = 2) {
@@ -578,7 +610,7 @@
             }
 
             const luniEfective = calcLuniEfective(dataStart, dataEnd);
-            const valoareDobanda = calcDobanda(valoare, dobanda, luniEfective);
+            const dob = calcDobanda(valoare, dobanda, perioada);
 
             items.push({
                 id: Date.now() + i,
@@ -589,8 +621,10 @@
                 dataEnd,
                 dobanda,
                 luniEfective,
-                valoareDobanda,
-                totalScadenta: valoare + valoareDobanda
+                dobandaBrut: dob.brut,
+                impozit: dob.impozit,
+                valoareDobanda: dob.net,
+                totalScadenta: valoare + dob.net
             });
         }
 
@@ -658,14 +692,16 @@
             return;
         }
 
-        const valoareDobanda = calcDobanda(valoare, dobanda, calcLuniEfective(dataStart, dataEnd));
+        const dob = calcDobanda(valoare, dobanda, perioada);
 
         depozite.push({
             id: Date.now(),
             perioada, valoare, valuta, dataStart, dataEnd, dobanda,
             luniEfective: calcLuniEfective(dataStart, dataEnd),
-            valoareDobanda,
-            totalScadenta: valoare + valoareDobanda
+            dobandaBrut: dob.brut,
+            impozit: dob.impozit,
+            valoareDobanda: dob.net,
+            totalScadenta: valoare + dob.net
         });
 
         save();
@@ -682,6 +718,26 @@
         depozite = depozite.filter(d => d.id !== id);
         save();
         render();
+    }
+
+    function exportCSV() {
+        if (depozite.length === 0) return;
+        const header = 'Perioada luni,Valoare,Valuta,Data deschidere,Data finalizarii,Dobanda %';
+        const rows = depozite.map(d => {
+            const valoare = formatNumber(d.valoare).replace(/\./g, '').replace(',', '.');
+            const dobanda = formatNumber(d.dobanda).replace(/\./g, '').replace(',', '.');
+            const ds = formatDate(d.dataStart);
+            const de = formatDate(d.dataEnd);
+            return `${d.perioada},${valoare},${d.valuta},${ds},${de},${dobanda}`;
+        });
+        const csv = header + '\n' + rows.join('\n') + '\n';
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `depozite_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     function clearAll() {
@@ -739,6 +795,7 @@
         const sorted = getSortedDepozite();
 
         document.getElementById('btnClearAll').style.display = depozite.length > 0 ? 'inline-block' : 'none';
+        document.getElementById('btnExport').style.display = depozite.length > 0 ? 'inline-block' : 'none';
 
         document.querySelectorAll('th[data-sort]').forEach(th => {
             th.classList.remove('sorted');
@@ -768,8 +825,8 @@
                 <td>${formatDate(d.dataEnd)}</td>
                 <td>${calcLuniRamase(d.dataEnd)}</td>
                 <td>${formatNumber(d.dobanda)}%</td>
-                <td class="interest-value">
-                    <span class="has-tooltip">+${formatNumber(d.valoareDobanda)}<span class="tooltip">${formatNumber(d.valoare)} × ${formatNumber(d.dobanda)}% × ${d.luniEfective || calcLuniEfective(d.dataStart, d.dataEnd)} luni ÷ 12\n= ${formatNumber(d.valoareDobanda)} ${d.valuta}</span></span>
+                <td class="interest-value" onclick="showDobPopup(event, ${d.dobandaBrut || d.valoareDobanda / 0.9}, ${d.impozit || d.valoareDobanda / 0.9 * 0.1}, ${d.valoareDobanda}, '${d.valuta}')">
+                    +${formatNumber(d.valoareDobanda)}
                 </td>
                 <td class="total-value">${formatNumber(d.totalScadenta)}</td>
                 <td class="actions-col">
@@ -812,6 +869,39 @@
             document.getElementById('dataEnd').value = d.toISOString().split('T')[0];
         }
     }
+
+    // --- POPUP DETALII DOBÂNDĂ ---
+
+    let activePopup = null;
+
+    function showDobPopup(event, brut, impozit, net, valuta) {
+        event.stopPropagation();
+        closeDobPopup();
+
+        const popup = document.createElement('div');
+        popup.className = 'dob-popup';
+        popup.innerHTML = `
+            <div>Brut: <strong>${formatNumber(brut)} ${valuta}</strong></div>
+            <div>Impozit 10%: <strong>−${formatNumber(impozit)} ${valuta}</strong></div>
+            <div>Net: <strong>${formatNumber(net)} ${valuta}</strong></div>
+        `;
+        document.body.appendChild(popup);
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        popup.style.left = Math.min(rect.left, window.innerWidth - popup.offsetWidth - 10) + 'px';
+        popup.style.top = (rect.top - popup.offsetHeight - 8) + 'px';
+
+        activePopup = popup;
+    }
+
+    function closeDobPopup() {
+        if (activePopup) {
+            activePopup.remove();
+            activePopup = null;
+        }
+    }
+
+    document.addEventListener('click', closeDobPopup);
 
     document.getElementById('perioada').addEventListener('input', autoCalcEndDate);
     document.getElementById('dataStart').addEventListener('input', autoCalcEndDate);
