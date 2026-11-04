@@ -33,6 +33,10 @@ Perioada luni,Valoare,Valuta,Data deschidere,Data finalizarii,Dobanda %
 - Formate de dată: `dd.mm.yyyy`, `dd/mm/yyyy`, `yyyy-mm-dd`
 - Valorile cu virgulă ca separator zecimal se pun între ghilimele: `"53029,57"`
 
+## Demo
+
+Aplicația este publicată la: **https://depozitebancare.netlify.app/**
+
 ## Deployment
 
 Fișier static unic (`index.html`). Se poate publica pe orice hosting static (Netlify, GitHub Pages, etc.) — nu necesită build sau dependențe.
