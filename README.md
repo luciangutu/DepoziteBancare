@@ -36,6 +36,7 @@ Perioada luni,Valoare,Valuta,Data deschidere,Data finalizarii,Dobanda %
 ## Demo
 
 Aplicația este publicată la: **https://depozitebancare.netlify.app/**
+sau la: **https://depozitebancare.climb.ro/**
 
 ## Deployment
 
