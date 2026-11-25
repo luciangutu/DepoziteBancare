@@ -848,7 +848,8 @@
         const byCurrency = {};
         depozite.forEach(d => {
             if (!byCurrency[d.valuta]) byCurrency[d.valuta] = { total: 0, dobanda: 0, scadenta: 0 };
-            byCurrency[d.valuta].total += d.valoare;
+            // Depozitele expirate nu mai sunt considerate "depuse"
+            if (getLuniRamaseNum(d.dataEnd) >= 0) byCurrency[d.valuta].total += d.valoare;
             byCurrency[d.valuta].dobanda += d.valoareDobanda;
             byCurrency[d.valuta].scadenta += d.totalScadenta;
         });
