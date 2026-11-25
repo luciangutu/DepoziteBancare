@@ -10,7 +10,7 @@ Aplicație web simplă pentru evidența depozitelor bancare personale. Rulează 
 - Calcul automat dobândă netă (brut − 10% impozit) și total la scadență
 - Sumar pe valute (total depus, dobândă, scadență)
 - Sortare pe orice coloană
-- Indicator luni rămase / expirat
+- Indicator luni rămase / expirat (depozitele expirate nu intră în „Total depus”)
 
 ## Format CSV
 
@@ -41,3 +41,13 @@ sau la: **https://depozitebancare.climb.ro/**
 ## Deployment
 
 Fișier static unic (`index.html`). Se poate publica pe orice hosting static (Netlify, GitHub Pages, etc.) — nu necesită build sau dependențe.
+
+## Versionare
+
+Versiunea curentă este afișată discret în subsolul paginii și se modifică manual în `index.html`:
+
+```html
+<footer class="app-version">v1.1.0</footer>
+```
+
+Actualizează versiunea din `index.html` la fiecare release.

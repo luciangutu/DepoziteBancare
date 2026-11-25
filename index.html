@@ -331,6 +331,14 @@
             h1 { font-size: 1.4rem; }
             .form-grid { grid-template-columns: 1fr 1fr; }
         }
+
+        .app-version {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            opacity: 0.6;
+            padding: 1rem 0;
+        }
     </style>
 </head>
 <body>
@@ -451,6 +459,8 @@
         </div>
     </div>
 </div>
+
+<footer class="app-version">v1.1.0</footer>
 
 <script>
     let depozite = JSON.parse(localStorage.getItem('depozite') || '[]');
